@@ -48,17 +48,17 @@
 
 // GET
 // to get all authors✅
-// to get specific author [Task]🔥
+// to get specific author [Task] done
 // to get a list of authors based on a book. ✅
 
 // POST
 // New Author ✅
 
 // PUT
-// update Author name using id [Task] 🔥
+// update Author name using id [Task] 🔥 done
 
 // DELETE
-// Delete an author [Task] 🔥🚀
+// Delete an author [Task] 🔥🚀 done
 
 // ---------------------------------------------------------------------------------------
 

@@ -214,7 +214,7 @@ Method      POST
 bookAPI.post("/book/author/new/:isbn/:authorId", async (req, res) => {
     const book = await BookModel.findOneAndUpdate({isbn: req.params.isbn}, {$push: {author: req.params.authorId}},{new: true});
     const author = await AuthorModel.findOneAndUpdate({id: req.params.authorId}, {$push: {books: req.params.isbn}}, {new: true});
-    return res.json({"message": `${book} ${author} was updated successfully`});
+    return res.json({message: `${book} ${author} was updated successfully`});
     //find book and update author list
     /* database.books.forEach((book) => {
         if(book.ISBN === req.params.isbn){
@@ -301,8 +301,10 @@ Access      PUBLIC
 Parameters  none
 Method      GET
 */
-bookAPI.get("/authors", (req, res) => {
-    return res.json({Authors: database.authors});
+bookAPI.get("/authors", async (req, res) => {
+    const allAuthors = await AuthorModel.find();
+    return res.json(allAuthors);
+    //return res.json({Authors: database.authors});
 });
 
 
@@ -313,15 +315,17 @@ Access      PUBLIC
 Parameters  authorId
 Method      GET
 */
-bookAPI.get("/author/:authorId", (req, res) => {
-    const specificAuthor = database.authors.filter(
+bookAPI.get("/author/:authorId", async (req, res) => {
+    const author = await AuthorModel.findOne({id: req.params.authorId});
+    return res.json(author);
+    /* const specificAuthor = database.authors.filter(
         (author) => author.id === parseInt(req.params.authorId)
     );
 
     if(specificAuthor.length === 0)
         return res.json({error: `No author found with the given id of ${req.params.authorId}`});
 
-    return res.json({author: specificAuthor});
+    return res.json({author: specificAuthor}); */
 }); 
 
 
@@ -333,8 +337,10 @@ Parameters  isbn
 Method      GET
 */
 
-bookAPI.get("/authors/:isbn", (req, res) => {
-    const getAuthors = database.authors.filter((author) => 
+bookAPI.get("/authors/:isbn", async (req, res) => {
+    const authors = await AuthorModel.find({books: {$in: req.params.isbn}});
+    return res.json(authors);
+    /* const getAuthors = database.authors.filter((author) => 
         author.books.includes(req.params.isbn)
     );
     
@@ -342,7 +348,7 @@ bookAPI.get("/authors/:isbn", (req, res) => {
         return res.json({error: `No Author found for the book of isbn ${req.params.isbn}`});
     
 
-    return res.json({authors: getAuthors});
+    return res.json({authors: getAuthors}); */
 });
 
 
@@ -354,8 +360,11 @@ Parameters  none
 Method      PUT
 */
 
-bookAPI.put("/book/author/update/:isbn", (req, res) => {
-    const {newAuthor} = req.body;
+bookAPI.put("author/new", async (req, res) => {
+    const {author} = req.body;
+    const addAuthor = await AuthorModel.create(author);
+    return res.json({message: `new author ${addAuthor} was added successfully`});
+    /* const {newAuthor} = req.body;
 
     database.authors.forEach((author) => {
         if(author.id === newAuthor.id){
@@ -367,9 +376,22 @@ bookAPI.put("/book/author/update/:isbn", (req, res) => {
     database.authors.push(newAuthor);
 
     return res.json({Authors: database.authors,
-    message: "New author was added successfully."});
+    message: "New author was added successfully."}); */
 });
 
+
+/*
+Route       /author/update/
+Desc        to update author name using id
+Access      PUBLIC
+Parameters  authorId
+Method      PUT
+*/
+bookAPI.put("/author/update/:authorId", async (req, res) => {
+    const {authorName} = req.body;
+    const updatedAuthor = await AuthorModel.findOneAndUpdate({id: req.params.authorId}, {name: authorName});
+    return res.json({message: `Author ${updatedAuthor} was updated successfully`});
+});
 
 /*
 Route       /author/delete/
@@ -378,8 +400,10 @@ Access      PUBLIC
 Parameters  authorId
 Method      DELETE
 */
-bookAPI.delete("/author/delete/:authorId", (req, res) => {
-    let updatedAuthorList = [];
+bookAPI.delete("/author/delete/:authorId", async (req, res) => {
+    const deletedAuthor = await AuthorModel.findOneAndDelete({id: req.params.authorId});
+    return res.json({message: `Author ${deletedAuthor} was deleted successfully`});
+    /* let updatedAuthorList = [];
     database.books.forEach((book) => {
         if(book.authors.includes(parseInt(req.params.authorId))){
             updatedAuthorList = book.authors.filter((authorId) => 
@@ -400,7 +424,7 @@ bookAPI.delete("/author/delete/:authorId", (req, res) => {
     database.authors = updatedAuthorList;
 
     return res.json({books: database.books,
-        authors: database.authors, message: "Author was deleted successfully."});
+        authors: database.authors, message: "Author was deleted successfully."}); */
 });
 
 
@@ -416,7 +440,7 @@ Method      GET
 */
 
 bookAPI.get("/publications", (req, res) => {
-    return res.json({publications: database.publications});
+    //return res.json({publications: database.publications});
 });
 
 
