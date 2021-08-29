@@ -439,7 +439,9 @@ Parameters  none
 Method      GET
 */
 
-bookAPI.get("/publications", (req, res) => {
+bookAPI.get("/publications", async (req, res) => {
+    const allPublications = await PublicationModel.find();
+    return res.json(allPublications);
     //return res.json({publications: database.publications});
 });
 
@@ -451,15 +453,17 @@ Access      PUBLIC
 Parameters  pubId
 Method      GET
 */
-bookAPI.get("/publication/:pubId", (req, res) => {
-    const specificPub = database.publications.filter(
+bookAPI.get("/publication/:pubId", async (req, res) => {
+    const specificPub = await PublicationModel.findOne({id: req.params.pubId});
+    return res.json(specificPub);
+    /* const specificPub = database.publications.filter(
         (publication) => publication.id === parseInt(req.params.pubId)
     );
 
     if(specificPub.length === 0)
         return res.json({error: `No publication found with the given id of ${req.params.pubId}`});
 
-    return res.json({Publication: specificPub});
+    return res.json({Publication: specificPub}); */
 }); 
 
 
@@ -472,8 +476,10 @@ Parameters  isbn
 Method      GET
 */
 
-bookAPI.get("/publication/:isbn", (req, res) => {
-    const getPub = database.publications.filter((publication) => 
+bookAPI.get("/publication/:isbn", async (req, res) => {
+    const getPubOfBook = await PublicationModel.findOne({books: {$in: req.params.isbn}});
+    return res.json(getPubOfBook);
+    /* const getPub = database.publications.filter((publication) => 
     publication.books.includes(req.params.isbn)
     );
     
@@ -481,20 +487,23 @@ bookAPI.get("/publication/:isbn", (req, res) => {
         return res.json({error: `No publication found for the book of isbn ${req.params.isbn}`});
     
 
-    return res.json({publication: getPub});
+    return res.json({publication: getPub}); */
 });
 
 
 /*
-Route       /publication/update/book
-Desc        to update/add new publication
+Route       /publication/new
+Desc        to add new publication
 Access      PUBLIC
-Parameters  isbn
+Parameters  none
 Method      PUT
 */
-bookAPI.put("/publication/update/book/:isbn", (req, res) => {
+bookAPI.put("/publication/new", async (req, res) => {
+    const {publication} = req.body;
+    await PublicationModel.create(publication);
+    return res.json({message: `${publication} was added successfully`});
     // update the publication database
-    database.publications.forEach((publication) => {
+    /* database.publications.forEach((publication) => {
         if(publication.id === req.body.pubId){
             return publication.books.push(req.params.isbn);
         }
@@ -508,10 +517,43 @@ bookAPI.put("/publication/update/book/:isbn", (req, res) => {
         }
     });
 
-    return res.json({books: database.books, publications: database.publications, message: "Successfully updated publications!"});
+    return res.json({books: database.books, publications: database.publications, message: "Successfully updated publications!"}); */
 });
 
 
+/*
+Route       /publication/update/
+Desc        to update the name of the publication using id
+Access      PUBLIC
+Parameters  pubId
+Method      PUT
+*/
+bookAPI.put("/publication/update/:pubId", async (req, res) => {
+    const {name} = req.body;
+    const updatedPublication = await PublicationModel.findOneAndUpdate(
+      { id: req.params.pubId },
+      { name },
+      { new: true }
+    );
+    return res.json({message: `${updatedPublication} was updated successfully`});
+});
+
+
+/*
+Route       /publication/update/new/
+Desc        to add a new book to a publication
+Access      PUBLIC
+Parameters  isbn, publicationId
+Method      PUT
+*/
+bookAPI.put("/publication/update/:pubId/:isbn", async (req, res) => {
+    const updatedPub = await PublicationModel.findOneAndUpdate(
+      { id: req.params.pubId },
+      { $push: { books: req.params.isbn } },
+      { new: true }
+    );
+    return res.json({message: `${updatedPub} book was added successfully`});
+});
 
 
 /*
@@ -521,15 +563,17 @@ Access      PUBLIC
 Parameters  isbn, publicationId
 Method      DELETE
 */
-bookAPI.delete("/publication/delete/book/:isbn/:pubId", (req, res) => {
+bookAPI.delete("/publication/delete/book/:isbn/:pubId", async (req, res) => {
+    const updatedPub = await PublicationModel.findOneAndUpdate({id: req.params.pubId}, {$pull: {books: req.params.isbn}}, {new: true});
+    return res.json({message: `${updatedPub} book was removed successfully`});
     // update publication database
-    database.publications.forEach((publication) => {
+    /* database.publications.forEach((publication) => {
         if(publication.id === parseInt(req.params.pubId)){
             const newBookList = publicaton.books.filter((book) => book !== req.params.isbn
             );
             publication.books = newBookList;
             return;
-        }
+        } 
     }); 
 
     //update book database
@@ -540,9 +584,20 @@ bookAPI.delete("/publication/delete/book/:isbn/:pubId", (req, res) => {
         }
     });
 
-    return res.json({books: database.books, publications: database.publications, message: "Publication deleted!"});
+    return res.json({books: database.books, publications: database.publications, message: "Publication deleted!"});*/
 });
 
+/*
+Route       /publication/delete/
+Desc        to delete a publication
+Access      PUBLIC
+Parameters  pubId
+Method      DELETE
+*/
+bookAPI.delete("/publication/delete/:pubId", async (req, res) => {
+    const pub = await PublicationModel.findOneAndDelete({id: req.params.pubId});
+    return res.json({message: `${pub} was deleted successfully`});
+});
 
 
 // Port to listen
