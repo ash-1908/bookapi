@@ -129,7 +129,7 @@ Router.post("/new", async (req, res) => {
   try {
     const { newBook } = req.body;
 
-    const addNewBook = BookModel.create(newBook);
+    const addNewBook = await BookModel.create(newBook);
     // database.books.push(newBook);
 
     return res.json({
