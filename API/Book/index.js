@@ -15,12 +15,13 @@ Method      GET
 */
 
 Router.get("/all", async (req, res) => {
-
+  try {
     const getAllBooks = await BookModel.find();
     return res.json(getAllBooks);
-
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
 });
-
 
 /*
 Route       /isbn/ 
@@ -30,17 +31,22 @@ Parameters  isbn
 Method      GET
 */
 Router.get("/isbn/:isbn", async (req, res) => {
-    const getSpecificBook = await BookModel.findOne({ISBN: req.params.isbn});
-    
+  try {
+    const getSpecificBook = await BookModel.findOne({ ISBN: req.params.isbn });
+
     // const getSpecificBook = database.books.filter((book) =>
     //     book.ISBN === req.params.isbn);
-    
-    if(!getSpecificBook)
-        return res.json({error: `No book found for the given ISBN: ${req.params.isbn}`});
 
-    return res.json({book: getSpecificBook});
+    if (!getSpecificBook)
+      return res.json({
+        error: `No book found for the given ISBN: ${req.params.isbn}`,
+      });
+
+    return res.json({ book: getSpecificBook });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
 });
-
 
 /*
 Route       /category/
@@ -51,20 +57,25 @@ Method      GET
 */
 
 Router.get("/category/:category", async (req, res) => {
+  try {
     const booksOfCategory = await BookModel.find({
-        category: req.params.category
+      category: req.params.category,
     });
-    
-    // const booksOfCategory = database.books.filter((book) => 
+
+    // const booksOfCategory = database.books.filter((book) =>
     //     book.category.includes(req.params.category)
     // );
 
-    if(booksOfCategory.length === 0)
-        return res.json({error: `No book found of the given category ${req.params.category}`});
+    if (booksOfCategory.length === 0)
+      return res.json({
+        error: `No book found of the given category ${req.params.category}`,
+      });
 
-    return res.json({books: booksOfCategory});
+    return res.json({ books: booksOfCategory });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
 });
-
 
 /*
 Route       /author/
@@ -74,15 +85,20 @@ Parameters  author
 Method      GET
 */
 Router.get("/author/:author", async (req, res) => {
+  try {
     const author = req.params.author;
-    let authorId = await AuthorModel.findOne({name: author});
-    if(authorId)
-        authorId = authorId.id;
+    let authorId = await AuthorModel.findOne({ name: author });
+    if (authorId) authorId = authorId.id;
     else
-        return res.json({ error: `No book found by author ${req.params.author}` });
-    const booksByAuthor = await BookModel.find({authors: authorId});
-    return res.json({books: booksByAuthor});
-    /* const getAuthor = database.authors.filter
+      return res.json({
+        error: `No book found by author ${req.params.author}`,
+      });
+    const booksByAuthor = await BookModel.find({ authors: authorId });
+    return res.json({ books: booksByAuthor });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
+  /* const getAuthor = database.authors.filter
     ((author) => author.name === req.params.author);
 
     const booksByAuthor = getAuthor[0].books;
@@ -100,7 +116,6 @@ Router.get("/author/:author", async (req, res) => {
      return res.json({books: bookObjects}); */
 });
 
-
 // POST
 
 /*
@@ -111,15 +126,19 @@ Parameters  none
 Method      POST
 */
 Router.post("/new", async (req, res) => {
-    const {newBook} = req.body;
-
+  try {
+    const { newBook } = req.body;
 
     const addNewBook = BookModel.create(newBook);
     // database.books.push(newBook);
 
-
-    return res.json({books: addNewBook, message:
-    "Book was added successfully."});
+    return res.json({
+      books: addNewBook,
+      message: "Book was added successfully.",
+    });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
 });
 
 // PUT
@@ -132,15 +151,19 @@ Parameters  isbn
 Method      PUT
 */
 Router.put("/update/:isbn", async (req, res) => {
-    const {updatedBookDetails} = req.body;
+  try {
+    const { updatedBookDetails } = req.body;
     console.log(updatedBookDetails);
     const book = await BookModel.findOneAndUpdate(
       { ISBN: req.params.isbn },
       updatedBookDetails
     );
 
-    return res.json({message: `${book} was updated successfully.`});
-    /* const {updatedBookDetails} = req.body;
+    return res.json({ message: `${book} was updated successfully.` });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
+  /* const {updatedBookDetails} = req.body;
 
     const title = updatedBookDetails.title;
     const authors =  updatedBookDetails.authors;
@@ -172,7 +195,6 @@ Router.put("/update/:isbn", async (req, res) => {
     "Book was updated successfully."}); */
 });
 
-
 /*
 Route       /author/new/
 Desc        to add new author to a book
@@ -181,15 +203,19 @@ Parameters  isbn, authorId
 Method      PUT
 */
 Router.put("/author/new/:isbn/:authorId", async (req, res) => {
+  try {
     const book = await BookModel.findOneAndUpdate(
       { ISBN: req.params.isbn },
       { $push: { authors: parseInt(req.params.authorId) } },
       { new: true }
     );
 
-    return res.json({message: `${book} was updated successfully`});
-    //find book and update author list
-    /* database.books.forEach((book) => {
+    return res.json({ message: `${book} was updated successfully` });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
+  //find book and update author list
+  /* database.books.forEach((book) => {
         if(book.ISBN === req.params.isbn){
             book.authors += req.params.authorId;
         }
@@ -212,19 +238,24 @@ Parameters  isbn
 Method      DELETE
 */
 Router.delete("/delete/:isbn", async (req, res) => {
-    /* const updatedBookList = database.books.filter((book) =>
+  /* const updatedBookList = database.books.filter((book) =>
     book.ISBN !== req.params.isbn);
 
     database.books = updatedBookList;
 
     return res.json({books: database.books, 
         message: `Book with ISBN ${req.params.isbn} was deleted successfully.`}); */
-    
-    const deletedBook = await BookModel.findOneAndDelete({ISBN: req.params.isbn});
 
-    return res.json({message: `${deletedBook} was deleted successfully`});
+  try {
+    const deletedBook = await BookModel.findOneAndDelete({
+      ISBN: req.params.isbn,
+    });
+
+    return res.json({ message: `${deletedBook} was deleted successfully` });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
 });
-
 
 /*
 Route       /author/delete/
@@ -234,12 +265,22 @@ Parameters  isbn, authorId
 Method      DELETE
 */
 Router.delete("/author/delete/:isbn/:authorId", async (req, res) => {
-    const book = await BookModel.findOneAndUpdate({ISBN: req.params.isbn}, {$pull: {authors: parseInt(req.params.authorId)}}, {new: true});
-    if(!book)
-        return res.json({message: `Book with ISBN ${req.params.isbn} not found`});
+  try {
+    const book = await BookModel.findOneAndUpdate(
+      { ISBN: req.params.isbn },
+      { $pull: { authors: parseInt(req.params.authorId) } },
+      { new: true }
+    );
+    if (!book)
+      return res.json({
+        message: `Book with ISBN ${req.params.isbn} not found`,
+      });
 
-    return res.json({message: `${book} was updated successfully`});
-    /* let updatedAuthorList = [];
+    return res.json({ message: `${book} was updated successfully` });
+  } catch (error) {
+    return res.json({ error: error.message });
+  }
+  /* let updatedAuthorList = [];
     database.books.forEach((book) => {
         if(book.ISBN === req.params.isbn){
             updatedAuthorList = book.authors.filter((authorId) => 
